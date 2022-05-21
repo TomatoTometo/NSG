@@ -4,6 +4,7 @@
 #include <chrono>
 #include <iomanip>
 #include <thread>
+#include <functional>
 
 #include <atomic>
 #include <cstddef>
@@ -11,13 +12,9 @@
 
 class FooTimer
 {
-private:
-
-  typedef void (*Process_Func_Ptr)(size_t);
-
 public:
 
-  FooTimer(const uint16_t hertz, Process_Func_Ptr func_) 
+  FooTimer(const uint16_t hertz, std::function<void(size_t)> func_) 
     : func(func_)
   {
     time_interval = static_cast<uint64_t>((1.0 / hertz) * 1e9);
@@ -106,13 +103,13 @@ private:
   std::atomic<bool> active;
   long time_interval;
 
-  Process_Func_Ptr func;
+  std::function<void(size_t)> func;
 };
 
 int main(int argc, char** argv)
 {
-
-const auto bar =  [](size_t intervals)
+double pi = 3.145416;
+const auto bar =  [&pi](size_t intervals)
  {
      static int counter = 0;
      static int missed = 0;
