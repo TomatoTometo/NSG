@@ -4,32 +4,11 @@
 #include <chrono>
 #include <iomanip>
 #include <thread>
-// #include <string.h>
-// #include <vector>
-// #include <memory>
 
 #include <atomic>
 #include <cstddef>
 #include <time.h>
-/*
-struct timespec deadline;
-clock_gettime(CLOCK_MONOTONIC, &deadline);
 
-// Add the time you want to sleep
-deadline.tv_nsec += 1000;
-
-// Normalize the time to account for the second boundary
-if(deadline.tv_nsec >= 1000000000) {
-    deadline.tv_nsec -= 1000000000;
-    deadline.tv_sec++;
-}
-clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &deadline, NULL);
-
-
-time_t tv_sec	whole seconds (valid values are >= 0)
-long tv_nsec	nanoseconds (valid values are [0, 999999999])
-
-*/
 class FooTimer
 {
 private:
@@ -38,10 +17,10 @@ private:
 
 public:
 
-  FooTimer(const double hertz, Process_Func_Ptr func_) 
+  FooTimer(const uint16_t hertz, Process_Func_Ptr func_) 
     : func(func_)
   {
-    time_interval = static_cast<long>((1.0 / hertz) * 1e9);
+    time_interval = static_cast<uint64_t>((1.0 / hertz) * 1e9);
 
     std::cout << "Time interval is " << time_interval << std::endl;
   }
@@ -59,7 +38,7 @@ public:
 
   void run()
   {
-      size_t failed_intervals = 0;
+    size_t failed_intervals = 0;
 
     struct timespec curr_time;
     struct timespec prev_time;
@@ -68,50 +47,43 @@ public:
     for(int i = 0; i < 10; i++)
     // do
     {
- auto start = std::chrono::steady_clock::now();
       prev_time.tv_nsec = prev_time.tv_nsec + time_interval;
-
+      // Correct range
       correct_timespec(prev_time);
 
       func(failed_intervals);
+      
       failed_intervals = 0;
 
       clock_gettime(CLOCK_MONOTONIC, &curr_time);
 
+      // current time is behind in seconds
       if(curr_time.tv_sec < prev_time.tv_sec)
       {
         curr_time.tv_sec = prev_time.tv_sec;
         curr_time.tv_nsec = prev_time.tv_nsec;
       }
-      else
+      else // current seconds is equal or ahead to previous
       { 
-        if(curr_time.tv_nsec <= prev_time.tv_nsec)
+        if (curr_time.tv_nsec > prev_time.tv_nsec)
         {
-            curr_time.tv_nsec = prev_time.tv_nsec;
-        }
-        else
-        {
-            // std::cout << "here " << __LINE__ <<std::endl;
-            // std::cout << "curr_time.tv_sec " << curr_time.tv_sec <<std::endl;
-            // std::cout << "curr_time.tv_nsec " << curr_time.tv_nsec <<std::endl;
-            // std::cout << "prev_time.tv_sec " << prev_time.tv_sec <<std::endl;
-            // std::cout << "prev_time.tv_nsec " << prev_time.tv_nsec <<std::endl;
             failed_intervals = ((curr_time.tv_nsec - prev_time.tv_nsec) / time_interval) + 1;
             prev_time.tv_nsec = (prev_time.tv_nsec + (time_interval * (failed_intervals)));
-
             correct_timespec(prev_time);
         }
 
-        // failed seconds
-        failed_intervals += (((curr_time.tv_sec - prev_time.tv_sec) * 1e9) / time_interval);
+        // If current time is ahead in seconds, get add more to the failed intervals
+        if(curr_time.tv_sec > prev_time.tv_sec)
+        {
+            failed_intervals += (((curr_time.tv_sec - prev_time.tv_sec) * 1e9) / time_interval);
+        }
+
+        // update the next sleep
         curr_time.tv_nsec = prev_time.tv_nsec;
       }
 
       prev_time = curr_time;
       clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &curr_time, NULL);
-auto end = std::chrono::steady_clock::now();
-std::chrono::duration<double> diff = end - start;
-std::cout << "----Time " << std::fixed << std::setprecision(10) << diff.count() << " s\n";
     } //while(active.load());
   }
 
@@ -170,12 +142,12 @@ const auto bar =  [](size_t intervals)
     static int once = 0;
     if(once++ == 2)
     {
-        // std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 
  };
 
- FooTimer foo(1440,bar);
+ FooTimer foo(10,bar);
  foo.activate();
 
  foo.run();
