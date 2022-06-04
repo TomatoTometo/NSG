@@ -5,65 +5,56 @@
 #include <array>
 #include <atomic>
 #include <cstddef>
+#include <functional>
 
 namespace nsg
 {
 
 ////////////////////////////////////////////////////////////////////////////////////////////////
-/// @brief Basically a poor man's attempt at a circular queue
-///        The idea is to simply have the `push` drive the back of the queue
-///        while `pop` drives the front. It synchronizes these calls with the help
-///        of std::atomic.
-///        
-///        The size of the queue will be the size provided + 1 but it will only hold
-///        `size` valid entries
-///        
-///        The queue is thread safe in the sense of having one thread pushing while another
-///        thread pops. It is NOT thread safe if there are multiple threads pushing or multiple
-///        threads popping. In such case, I suggest guarding the push or pop wih a mutex
+/// @brief Basically a poor man's attempt at a circular queue. This can also be used a a 
+///        single producer single consumer queue
 ////////////////////////////////////////////////////////////////////////////////////////////////
 template <typename T, size_t size>
 class CircularQueue
 {
-private:
-  /// Copy function signature
-  typedef void (*Cpy_Func)(const T&, T&);
-
 public:
+  
+  /// Don't allow copies
+  CircularQueue (const CircularQueue&) = delete;
+  CircularQueue& operator= (const CircularQueue&) = delete;
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   CircularQueue(T init_val = T{}) : 
-    start{0}, 
-    end{0}, 
-    ACTUAL_SIZE{size + 1}
+    m_start{0}, 
+    m_end{0}, 
+    QUEUE_SIZE{size + 1}
   {
-    std::fill(std::begin(arr), std::end(arr), init_val);
+    std::fill(std::begin(m_array), std::end(m_array), init_val);
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////
   /// @brief Simply pushes `data` into the queue
   /// @param data Data to be pushed into the queue
-  /// @param copy_data Optional function to use when copying data.
-  ///                  The function signature is void(T& source, T& destination)
+  /// @param callback Optional callback used when pushing to the queue
   /// @return True if sucessfully pushed to queue, false otherwise
-  bool push(T& data, Cpy_Func copy_data = nullptr)
+  bool push(T& data, std::function<void(const T&, T&)> callback = nullptr)
   {
-    const size_t end_ = end.load();
-    const size_t next_end_ = (end_ + 1) % ACTUAL_SIZE;
+    const size_t end = m_end.load();
+    const size_t next_end = (end + 1) % QUEUE_SIZE;
 
     // Space available?
-    if(next_end_ != start.load())
+    if(next_end != m_start.load())
     {
-      if (copy_data)
+      if (callback)
       {
-        copy_data(data, arr[end_]);
+        callback(data, m_array[end]);
       }
       else
       {
-        arr[end_] = data;
+        m_array[end] = data;
       }
 
-      end.store(next_end_);
+      m_end.store(next_end);
       return true;
     }
 
@@ -74,40 +65,39 @@ public:
   ////////////////////////////////////////////////////////////////////////////////////////////////
   /// @brief Simply pops `data` from the queue
   /// @param data Output data copied from the queue
-  /// @param copy_data Optional function to use when copying data.
-  ///                  The function signature is void(T& source, T& destination)
+  /// @param callback Optional callback used when poping from the queue
   /// @return True if sucessfully popped from queue, false otherwise
-  bool pop(T& data, Cpy_Func copy_data = nullptr)
+  bool pop(T& data, std::function<void(const T&, T&)> callback = nullptr)
   {
-    const size_t start_ = start.load();
-    if(start_ == end.load())
+    const size_t start = m_start.load();
+    if(start == m_end.load())
     {
       // Nothing to pop
       return false;
     }
 
     // Pop
-    if(copy_data)
+    if(callback)
     {
-      copy_data(arr[start_], data);
+      callback(m_array[start], data);
     }
     else
     {
-      data = std::move(arr[start_]);
+      data = std::move(m_array[start]);
     }
 
-    start.store((start_ + 1) % ACTUAL_SIZE);
+    m_start.store((start + 1) % QUEUE_SIZE);
 
     return true;
   }
 
 private:
-  std::atomic<size_t> start;
-  std::atomic<size_t> end;
+  std::atomic<size_t> m_start;
+  std::atomic<size_t> m_end;
 
-  const size_t ACTUAL_SIZE;
+  const size_t QUEUE_SIZE;
 
-  std::array<T, size + 1> arr;
+  std::array<T, size + 1> m_array;
 };
 
 } // end namespace nsg
