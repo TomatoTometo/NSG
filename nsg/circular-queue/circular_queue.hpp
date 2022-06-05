@@ -37,7 +37,34 @@ public:
   /// @param data Data to be pushed into the queue
   /// @param callback Optional callback used when pushing to the queue
   /// @return True if sucessfully pushed to queue, false otherwise
-  bool push(T& data, std::function<void(const T&, T&)> callback = nullptr)
+  bool push(const T& data, std::function<void(const T&, T&)> callback = nullptr)
+  {
+    const size_t end = m_end.load();
+    const size_t next_end = (end + 1) % QUEUE_SIZE;
+
+    // Space available?
+    if(next_end != m_start.load())
+    {
+      if (callback)
+      {
+        callback(data, m_array[end]);
+      }
+      else
+      {
+        m_array[end] = data;
+      }
+
+      m_end.store(next_end);
+      return true;
+    }
+
+    // It's full
+    return false;
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////
+  /// @brief Rvalue overload
+  bool push(const T&& data, std::function<void(const T&, T&)> callback = nullptr)
   {
     const size_t end = m_end.load();
     const size_t next_end = (end + 1) % QUEUE_SIZE;

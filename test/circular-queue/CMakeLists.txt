@@ -6,12 +6,7 @@ target_link_libraries(test-circular-queue PUBLIC
   ${GTEST_BOTH_LIBRARIES}
 )
 
-message(STATUS "GTest_INCLUDE_DIRS is ${GTest_INCLUDE_DIRS}" )
-message(STATUS "GTEST_BOTH_LIBRARIES is ${GTEST_BOTH_LIBRARIES}" )
-
 target_include_directories(test-circular-queue PUBLIC
-  ${GTest_INCLUDE_DIRS}
+  ${PROJECT_SOURCE_DIR}
 )
-
-
 add_test(NAME test-circular-queue COMMAND test-circular-queue)
