@@ -75,6 +75,83 @@ Expectation Order
  + InSequense
 
 
+
+-----------------    gtest_TEST:
+
+[==========] Running 3 tests from 2 test suites.
+[----------] Global test environment set-up.
+[----------] 2 tests from sillyBinarySearch
+[ RUN      ] sillyBinarySearch.FindsValueTowardsEndOfData
+[       OK ] sillyBinarySearch.FindsValueTowardsEndOfData (0 ms)
+[ RUN      ] sillyBinarySearch.FindsValueTowardsStartOfData
+[       OK ] sillyBinarySearch.FindsValueTowardsStartOfData (0 ms)
+[----------] 2 tests from sillyBinarySearch (0 ms total)
+
+[----------] 1 test from itemsInArray
+[ RUN      ] itemsInArray.areBiggerThanValue
+gtest_TEST.cpp:64: Failure
+Value of: data[i]
+Expected: is < 5
+Actual: 5 (of type unsigned int)
+[MORE INFO] Test failed at i = 4
+
+[  FAILED  ] itemsInArray.areBiggerThanValue (0 ms)
+[----------] 1 test from itemsInArray (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 3 tests from 2 test suites ran. (0 ms total)
+[  PASSED  ] 2 tests.
+[  FAILED  ] 1 test, listed below:
+[  FAILED  ] itemsInArray.areBiggerThanValue
+
+-----------------    gtest_TEST_P:
+
+[==========] Running 6 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 6 tests from MySillyBinaryTestSuite/sillyBinarySearch
+[ RUN      ] MySillyBinaryTestSuite/sillyBinarySearch.FindsValueInData/0
+[       OK ] MySillyBinaryTestSuite/sillyBinarySearch.FindsValueInData/0 (0 ms)
+[ RUN      ] MySillyBinaryTestSuite/sillyBinarySearch.FindsValueInData/1
+[       OK ] MySillyBinaryTestSuite/sillyBinarySearch.FindsValueInData/1 (0 ms)
+[ RUN      ] MySillyBinaryTestSuite/sillyBinarySearch.FindsValueInData/2
+[       OK ] MySillyBinaryTestSuite/sillyBinarySearch.FindsValueInData/2 (0 ms)
+[ RUN      ] MySillyBinaryTestSuite/sillyBinarySearch.FindsValueInData/3
+[       OK ] MySillyBinaryTestSuite/sillyBinarySearch.FindsValueInData/3 (0 ms)
+[ RUN      ] MySillyBinaryTestSuite/sillyBinarySearch.FindsValueInData/4
+[       OK ] MySillyBinaryTestSuite/sillyBinarySearch.FindsValueInData/4 (0 ms)
+[ RUN      ] MySillyBinaryTestSuite/sillyBinarySearch.FindsValueInData/5
+[       OK ] MySillyBinaryTestSuite/sillyBinarySearch.FindsValueInData/5 (0 ms)
+[----------] 6 tests from MySillyBinaryTestSuite/sillyBinarySearch (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 6 tests from 1 test suite ran. (0 ms total)
+[  PASSED  ] 6 tests.
+
+
+-----------------    gtest_TEST_F:
+
+[==========] Running 2 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 2 tests from sillyBinarySearch
+[    >>>   ] Here calling << SetUpTestSuite!
+[ RUN      ] sillyBinarySearch.FindsValueTowardsEndOfData
+[    >>    ] Here calling << SetUp!
+[    >>    ] Here calling << TearDown!
+[       OK ] sillyBinarySearch.FindsValueTowardsEndOfData (0 ms)
+[ RUN      ] sillyBinarySearch.FindsValueTowardsStartOfData
+[    >>    ] Here calling << SetUp!
+[    >>    ] Here calling << TearDown!
+[       OK ] sillyBinarySearch.FindsValueTowardsStartOfData (0 ms)
+[    >>>   ] Here calling << TearDownTestSuite!
+[----------] 2 tests from sillyBinarySearch (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 2 tests from 1 test suite ran. (0 ms total)
+[  PASSED  ] 2 tests.
+
+
+
+
 ]]
 
 create_test(gtest_TEST.cpp)
